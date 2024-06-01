@@ -1,0 +1,6 @@
+#!/bin/sh
+
+CWD=$(pwd)
+cd hls-server
+go run . $@
+cd CWD

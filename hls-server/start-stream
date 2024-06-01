@@ -1,0 +1,8 @@
+#!/usr/bin/bash
+
+ffmpeg -f v4l2 -i /dev/video0 -c:v libx264 \
+    -pix_fmt yuv420p \
+    -f hls \
+    -hls_time 5 \
+    -hls_playlist_type event \
+    stream/output.m3u8

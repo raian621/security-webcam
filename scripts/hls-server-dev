@@ -1,0 +1,6 @@
+#!/bin/sh
+
+CWD=$(pwd)
+cd hls-server
+air run -- $@
+cd CWD

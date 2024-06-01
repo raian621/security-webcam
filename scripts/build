@@ -1,0 +1,16 @@
+#/bin/sh
+
+mkdir -p build
+mkdir -p build/dist
+
+npm run build
+cd hls-server
+go build
+cd ..
+
+cp hls-server/hls-server build
+
+echo \
+"#!/bin/sh
+./hls-server" > dist/start
+chmod 744 dist/start
