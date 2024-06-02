@@ -2,5 +2,4 @@
 
 CWD=$(pwd)
 cd hls-server
-go run . $@
-cd CWD
+go run . -- $@
