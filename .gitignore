@@ -24,7 +24,4 @@ dist-ssr
 *.sw?
 
 .env
-
-tmp/*
-stream/
 build/*

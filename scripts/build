@@ -1,16 +1,25 @@
 #/bin/sh
 
-mkdir -p build
+# This is hacky, and I kind of hate this. Since the Vite build scripts insert
+# `VITE_` environment variables into the output JavaScript bundle, we can
+# use sed to replace the `{{.HlsServerUrl}}` string
+VITE_HLS_SERVER_URL="{{.HlsServerUrl}}"
+HLS_SERVER_URL="http://0.0.0.0:8080"
+
+# just in case you want to supply an actual URL
+if [ $# -eq 1 ]; then
+  HLS_SERVER_URL=$1
+fi
+
+export VITE_HLS_SERVER_URL=$VITE_HLS_SERVER_URL
+
 mkdir -p build/dist
+echo  $(ls build/dist/assets/*.js)
 
 npm run build
+sed -i "s|{{\.HlsServerUrl}}|$HLS_SERVER_URL|g" $(ls build/dist/assets/*.js)
 cd hls-server
 go build
 cd ..
 
-cp hls-server/hls-server build
-
-echo \
-"#!/bin/sh
-./hls-server" > dist/start
-chmod 744 dist/start
+mv hls-server/hls-server build
