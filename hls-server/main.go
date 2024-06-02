@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"html/template"
 	"log"
 	"net"
 	"net/http"
@@ -176,24 +175,4 @@ func ffmpegArgsInit(videoDevice string) {
 		"-master_pl_name", `livestream.m3u8`,
 		"-y", "stream/livestream-%v.ts",
 	)
-}
-
-func insertHlsUrlIntoBundle(w http.ResponseWriter, filepath, dir, url string) {
-	tmpl, err := template.New(filepath).ParseFiles(fmt.Sprintf("%s/%s", dir, filepath))
-
-	if err != nil {
-		log.Println(err)
-	}
-
-	err = tmpl.Execute(w, struct {
-		HlsServerUrl string
-	}{HlsServerUrl: url})
-
-	tmpl.Execute(w, struct {
-		HlsServerUrl string
-	}{HlsServerUrl: url})
-
-	if err != nil {
-		log.Println(err)
-	}
 }
