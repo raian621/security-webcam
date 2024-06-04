@@ -80,6 +80,6 @@ go run .
 
 ## TODO
 
-- [ ] Implement a mechanism to check the max webcam resolution, frame rate, etc.
+- [x] Implement a mechanism to check the max webcam resolution, frame rate, etc.
 - [ ] Control webcam resolution, frame rate, etc.
 - [ ] Dockerize the application, publish on ghcr.io
