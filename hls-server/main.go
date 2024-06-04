@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -16,6 +15,9 @@ var (
 	streamDir    = "stream"
 	streamOnline = false
 	ffmpegArgs   = make([]string, 0)
+	ffmpegCmd    *exec.Cmd
+	stopStream   = make(chan struct{}, 1)
+	siteDistPath string
 )
 
 func main() {
@@ -25,62 +27,22 @@ func main() {
 	videoDevice := flag.String("video-device", "/dev/video0", "video device to stream")
 
 	flag.Parse()
-	log.Println(*distPath)
-	stopStream := make(chan struct{}, 1)
+
+	siteDistPath = *distPath
 
 	ffmpegArgsInit(*videoDevice)
 	createStreamDir()
 	go startStream(stopStream)
 	streamOnline = true
 
-	http.HandleFunc("/", logging(GET(http.FileServer(http.Dir(*distPath)).ServeHTTP)))
-
-	http.HandleFunc("/stream/", logging(CORS(
-		http.StripPrefix(
-			"/stream/",
-			http.FileServer(http.Dir(streamDir)),
-		).ServeHTTP,
-	)))
-
-	http.HandleFunc("/start-stream/", logging(CORS(POST(func(w http.ResponseWriter, r *http.Request) {
-		if !streamOnline {
-			go startStream(stopStream)
-			streamOnline = true
-			return
-		}
-
-		w.WriteHeader(http.StatusAccepted)
-	}))))
-
-	http.HandleFunc("/stop-stream/", logging(CORS(POST(func(w http.ResponseWriter, r *http.Request) {
-		if streamOnline {
-			stopStream <- struct{}{}
-			streamOnline = false
-			return
-		}
-
-		w.WriteHeader(http.StatusAccepted)
-	}))))
-
-	// this should probably be done through websockets, but whatever
-	http.HandleFunc("/status/", logging(CORS(GET(func(w http.ResponseWriter, r *http.Request) {
-		status := struct {
-			StreamOnline bool `json:"streamOnline"`
-		}{
-			StreamOnline: streamOnline,
-		}
-
-		w.Header().Add("Content-Type", "application/json")
-
-		err := json.NewEncoder(w).Encode(&status)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	}))))
+	server := http.Server{
+		Addr:    net.JoinHostPort(*host, *port),
+		Handler: http.NewServeMux(),
+	}
+	addHandlers(server.Handler.(*http.ServeMux))
 
 	log.Printf("Listening on %s://%s:%s", "http", *host, *port)
-	log.Fatalln(http.ListenAndServe(net.JoinHostPort(*host, *port), nil))
+	log.Fatalln(server.ListenAndServe())
 
 	stopStream <- struct{}{}
 }
@@ -96,6 +58,7 @@ func startStream(stopStream chan struct{}) {
 		log.Fatalln(err)
 	}
 
+	ffmpegCmd = cmd
 	log.Printf("started ffmpeg process with pid `%d`\n", cmd.Process.Pid)
 	<-stopStream
 
@@ -103,25 +66,18 @@ func startStream(stopStream chan struct{}) {
 	if err := cmd.Process.Kill(); err != nil {
 		log.Fatalln(err)
 	}
+	ffmpegCmd = nil
 
 	streamOnline = false
 }
 
 func ffmpegArgsInit(videoDevice string) {
-	resolutions := []struct {
-		width   int
-		height  int
-		maxKbps int
-	}{
-		{width: 480, height: 360, maxKbps: 600},
-		{width: 640, height: 480, maxKbps: 1500},
-		{width: 1280, height: 720, maxKbps: 3000},
-		// {width: 1920, height: 1080, maxKbps: 6000},
-	}
+	getResolutions(videoDevice)
 
 	ffmpegArgs = []string{
 		"-i",
 		videoDevice,
+		// "-r", "5",
 		"-c:v",
 		"libx264",
 		"-crf",
@@ -141,9 +97,10 @@ func ffmpegArgsInit(videoDevice string) {
 		ffmpegArgs = append(
 			ffmpegArgs,
 			fmt.Sprintf("-filter:v:%d", i),
-			fmt.Sprintf("scale=w=%d:h=%d:force_original_aspect_ratio=decrease", res.width, res.height),
+			// fmt.Sprintf("scale=w=%d:h=%d:force_original_aspect_ratio=decrease", res.width, res.height),
+			fmt.Sprintf("scale=w=%d:h=%d", res.Width, res.Height),
 			fmt.Sprintf("-maxrate:v:%d", i),
-			fmt.Sprintf("%dk", res.maxKbps),
+			fmt.Sprintf("%dk", res.MaxKbps),
 		)
 	}
 	ffmpegArgs = append(ffmpegArgs, "-var_stream_map")
@@ -154,7 +111,7 @@ func ffmpegArgsInit(videoDevice string) {
 
 			for i, res := range resolutions {
 				varStreamMap.WriteString(
-					fmt.Sprintf("v:%d,name:%dp", i, res.height),
+					fmt.Sprintf("v:%d,name:%dp", i, res.Height),
 				)
 				if i < len(resolutions)-1 {
 					varStreamMap.WriteByte(' ')
