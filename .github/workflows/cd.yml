@@ -20,6 +20,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: raian621/security-webcam:latest
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
+          tags: ghcr.io/raian621/security-webcam:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
