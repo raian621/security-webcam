@@ -34,12 +34,10 @@ jobs:
       #   continue-on-error: true
 
   deployment:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/cd.yml
     if: github.event.pull_request.merged == true || github.event_name == 'push'
     
     needs:
       - checks
-    steps:
-      - uses: "./.github/workflows/cd.yml"
       
     
