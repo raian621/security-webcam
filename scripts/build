@@ -16,8 +16,11 @@ export VITE_HLS_SERVER_URL=$VITE_HLS_SERVER_URL
 mkdir -p build/dist
 echo  $(ls build/dist/assets/*.js)
 
-npm run build
+cd client
+npm run build --outDir ../build/dist
+cd ..
 sed -i "s|{{\.HlsServerUrl}}|$HLS_SERVER_URL|g" $(ls build/dist/assets/*.js)
+
 cd hls-server
 go build
 cd ..

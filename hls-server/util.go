@@ -33,7 +33,10 @@ func getResolutions(videoDevice string) error {
 	resolutions = []ResolutionWithBitrate{}
 
 	device := v4l2.NewDevice(videoDevice)
-	device.Open(unix.O_RDONLY)
+	err := device.Open(unix.O_RDONLY)
+	if err != nil {
+		return err
+	}
 	defer func() {
 		if err := device.Close(); err != nil {
 			log.Println("unexpected error while closing video device")

@@ -15,7 +15,6 @@ var (
 	streamDir    = "stream"
 	streamOnline = false
 	ffmpegArgs   = make([]string, 0)
-	ffmpegCmd    *exec.Cmd
 	stopStream   = make(chan struct{}, 1)
 	siteDistPath string
 )
@@ -48,7 +47,9 @@ func main() {
 }
 
 func createStreamDir() {
-	os.Mkdir(streamDir, 0744)
+	if err := os.Mkdir(streamDir, 0744); err != nil {
+		panic(err)
+	}
 }
 
 func startStream(stopStream chan struct{}) {
@@ -58,7 +59,6 @@ func startStream(stopStream chan struct{}) {
 		log.Fatalln(err)
 	}
 
-	ffmpegCmd = cmd
 	log.Printf("started ffmpeg process with pid `%d`\n", cmd.Process.Pid)
 	<-stopStream
 
@@ -66,13 +66,14 @@ func startStream(stopStream chan struct{}) {
 	if err := cmd.Process.Kill(); err != nil {
 		log.Fatalln(err)
 	}
-	ffmpegCmd = nil
 
 	streamOnline = false
 }
 
 func ffmpegArgsInit(videoDevice string) {
-	getResolutions(videoDevice)
+	if err := getResolutions(videoDevice); err != nil {
+		panic(err)
+	}
 
 	ffmpegArgs = []string{
 		"-i",
