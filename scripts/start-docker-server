@@ -1,0 +1,17 @@
+#!/bin/sh
+
+if [ -z $HLS_SERVER_URL ]; then
+  HLS_SERVER_URL=http://0.0.0.0:8080
+fi
+
+if [ -z $VIDEO_DEVICE ]; then
+  VIDEO_DEVICE=/dev/video0
+fi
+
+grep {{.HlsServerUrl}} $(ls /var/www/site/assets/*.js) > /dev/null
+if [ $? -ne 1 ]; then
+  echo $HLS_SERVER_URL
+  sed -i "s|{{.HlsServerUrl}}|$HLS_SERVER_URL|g" /var/www/site/assets/*.js
+fi
+
+/bin/hls-server -dist-path=/var/www/site -video-device=$VIDEO_DEVICE

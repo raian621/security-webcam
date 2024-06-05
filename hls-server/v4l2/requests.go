@@ -1,7 +1,7 @@
 package v4l2
 
 var (
-	_IOC_NONE  uint32 = 0
+	// _IOC_NONE  uint32 = 0
 	_IOC_WRITE uint32 = 1
 	_IOC_READ  uint32 = 2
 
@@ -21,17 +21,17 @@ func ioctlEncode(dir, _type, nr, size uint32) uintptr {
 		(nr << _IOC_NRSHIFT) | (size << _IOC_SIZESHIFT)))
 }
 
-func ioctlEncodeNone(_type byte, nr, size uint32) uintptr {
-	return ioctlEncode(_IOC_NONE, uint32(_type), nr, size)
-}
+// func ioctlEncodeNone(_type byte, nr, size uint32) uintptr {
+// 	return ioctlEncode(_IOC_NONE, uint32(_type), nr, size)
+// }
 
 func ioctlEncodeR(_type byte, nr, size uint32) uintptr {
 	return ioctlEncode(_IOC_READ, uint32(_type), nr, size)
 }
 
-func ioctlEncodeW(_type byte, nr, size uint32) uintptr {
-	return ioctlEncode(_IOC_WRITE, uint32(_type), nr, size)
-}
+// func ioctlEncodeW(_type byte, nr, size uint32) uintptr {
+// 	return ioctlEncode(_IOC_WRITE, uint32(_type), nr, size)
+// }
 
 func ioctlEncodeWR(_type byte, nr, size uint32) uintptr {
 	return ioctlEncode(_IOC_READ|_IOC_WRITE, uint32(_type), nr, size)
