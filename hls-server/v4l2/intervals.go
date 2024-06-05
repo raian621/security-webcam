@@ -119,6 +119,6 @@ frame rates. Given the frame interval the frame rate can be computed as follows:
 
 frame_rate = 1 / frame_interval
 */
-func frameRate(interval V4L2_fract) float32 {
-	return float32(interval.Demoninator) / float32(interval.Numerator)
-}
+// func frameRate(interval V4L2_fract) float32 {
+// 	return float32(interval.Demoninator) / float32(interval.Numerator)
+// }
