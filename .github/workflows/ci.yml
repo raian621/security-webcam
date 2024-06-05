@@ -18,6 +18,7 @@ jobs:
         uses: golangci/golangci-lint-action@v4
         with:
          version: v1.54
+         working-directory: hls-server
          
       # - name: run go tests with coverage
       #   run: go test -v -cover ./...
@@ -34,6 +35,8 @@ jobs:
 
   deployment:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true || github.event_name == 'push'
+    
     needs:
       - checks
     steps:
